@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+
+<html
+ 
+lang="en">
+
+<head>
+
+    
+<meta
+ 
+charset="UTF-8">
+
+    
+<meta
+ 
+name="viewport"
+ 
+content="width=device-width, initial-scale=1.0">
+
+    
+<title>Coinbase Products</title>
+</head>
+<body>
+    <div id="products"></div>
+
+    <script>
+        // Fetch product data from the API
+        fetch('https://api.coinbase.com/api/v3/brokerage/products')
+            .then(response => response.json())
+            .then(data => {
+                // Display product data in the 'products' div
+                const productsDiv = document.getElementById('products');
+                const productList = document.createElement('ul');
+
+                for (const product of data) {
+                    const productItem = document.createElement('li');
+                    productItem.textContent = `Product ID: ${product.id}, Base Currency: ${product.base_currency}, Quote Currency: ${product.quote_currency}`;
+                    productList.appendChild(productItem);
+                }
+
+                productsDiv.appendChild(productList);
+            });
+    </script>
+</body>
+</html>
