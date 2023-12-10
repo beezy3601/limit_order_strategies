@@ -1,6 +1,7 @@
 import json, hmac, hashlib, time, requests
 from requests.auth import AuthBase
 import config
+from coinbase_advanced_trader.strategies.limit_order_strategies import fiat_limit_sell
 
 # Before implementation, set environmental variables with the names API_KEY and API_SECRET
 API_KEY = config.API_KEY

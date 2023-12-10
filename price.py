@@ -47,7 +47,7 @@ def get_crypto_price(ticker_symbol):
 
 # Example usage:
 if __name__ == "__main__":
-    ticker_symbol = "AVAX-USD"
+    ticker_symbol = "BTC-USDC"
     last_price = get_crypto_price(ticker_symbol)
 
     print("Last Price:", last_price)

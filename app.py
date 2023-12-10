@@ -6,7 +6,8 @@ import http.client
 from crypto import get_all_accounts
 from price import get_crypto_price
 from coinbase_advanced_trader.config import set_api_credentials
-from coinbase_advanced_trader.strategies.limit_order_strategies import fiat_limit_buy, fiat_limit_sell, fiat_market_buy
+from coinbase_advanced_trader.strategies.limit_order_strategies import fiat_limit_buy, fiat_limit_sell, fiat_market_buy, fiat_market_sell
+from decimal import Decimal, ROUND_DOWN
 
 API_KEY = config.API_KEY
 API_SECRET = config.SECRET_KEY
@@ -50,6 +51,7 @@ def trading_webhook():
     # Extract relevant information from TradingView alert payload
     ticker = data['ticker']
     ticker_symbol = ticker[:-3] + '-USD'
+    ticker_quote = ticker[:-3]
    
     # ticker_symbol = f"{ticker[:3]}-{ticker[3:]}"
 
@@ -59,40 +61,41 @@ def trading_webhook():
         return accounts_data_response['error']
 
     accounts_data = accounts_data_response.get('accounts', [])
+    
+
+# Print the available currencies in the account data for debugging
+    available_currencies = [account['currency'] for account in accounts_data]
+
+    
+
+
 
     # Extract USD balance
-    usd_balance = next((account['available_balance']['value'] for account in accounts_data if account['currency'] == 'USD'), None)
-
-    if usd_balance is None:
-        return "USD balance not found in account data."
-
-    price = float(get_crypto_price(ticker_symbol))
-
-    dry_powder = float(usd_balance)
+    ticker_balance = next((account['available_balance']['value'] for account in accounts_data if account['currency'] == ticker_quote), None)
     
-    if dry_powder < 200:
-        qty = dry_powder / price
-    else:
-        qty = dry_powder * 0.17 / price
-
-    if qty <= 0:
-        return "Insufficient quantity."
+    print(ticker_quote, ticker_balance)
+    print(f"Available Currencies: {available_currencies}")
     
-    amount = (qty * price)
+    if ticker_balance is None:
+        return f"{ticker_quote} balance not found in account data."
+
+    print(ticker_quote, ticker_balance)
+
+    price = Decimal(get_crypto_price(ticker_symbol))
+
+    # qty = ticker_balance[ticker_quote]['free']
+    ticker_balance_mill = Decimal(ticker_balance)
+    rounded_balance = ticker_balance_mill.quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+    print(rounded_balance)
+    
+    amount = (rounded_balance * price)/2
 
     # Place a market buy order
-    buy_order_response = fiat_market_buy(ticker_symbol, amount)
+    sell_order_response = fiat_market_sell(ticker_symbol, amount)
     
-    # Calculate take profit price
-    # take_profit_price = price * 1.0175  # Set take profit 1% higher than buy price
-    sell_qty = qty * 0.32
-
-    # Place a limit sell order with take profit
-    take_profit_order_response = fiat_limit_sell(ticker_symbol, sell_qty, 1.0175)
     
     return {
-        'buy_order': buy_order_response,
-        'take_profit_order': take_profit_order_response
+        'sell_order': sell_order_response,
     }
 
 if __name__ == '__main__':
